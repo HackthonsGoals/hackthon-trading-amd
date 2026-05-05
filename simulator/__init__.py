@@ -1,0 +1,2 @@
+"""Standalone fake execution simulator."""
+
