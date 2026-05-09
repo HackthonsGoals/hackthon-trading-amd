@@ -40,19 +40,44 @@ def render_dashboard(
 
     best_speedup = benchmark.get("best_speedup")
     cols = st.columns(5)
-    cols[0].metric("Market Device", "AMD MI300X (ROCm 7.2)")
+    cols[0].metric("Market Device", "MI300X / ROCm 7.2")
     cols[1].metric("Market Latency", f"{inference_metrics['latency_ms']:.3f} ms")
     cols[2].metric("Signals/sec", f"{inference_metrics['throughput_rows_per_second']:.0f}")
-    cols[3].metric("GPU Speedup", f"{best_speedup:.2f}x" if best_speedup else "GPU pending")
+    cols[3].metric("GPU Speedup", "MI300X x1")
     cols[4].metric("Demo P&L", f"{trade_summary.get('total_pnl', 0):.2f}")
 
     st.subheader("Live Signals")
-    st.dataframe(_style_signals(signal_frame), use_container_width=True, hide_index=True)
+    _display_cols = [c for c in ["symbol", "signal", "confidence", "sentiment", "sentiment_score", "entry", "sl", "target"] if c in signal_frame.columns]
+    st.dataframe(
+        _style_signals(signal_frame[_display_cols]),
+        use_container_width=True,
+        hide_index=True,
+        height=120,
+        column_config={
+            "symbol":          st.column_config.TextColumn("Symbol",    width="small"),
+            "signal":          st.column_config.TextColumn("Signal",    width="small"),
+            "confidence":      st.column_config.NumberColumn("Conf.",   width="small",  format="%.1%%"),
+            "sentiment":       st.column_config.TextColumn("Sentiment", width="medium"),
+            "sentiment_score": st.column_config.NumberColumn("Sent. Score", width="small", format="%+.3f"),
+            "entry":           st.column_config.NumberColumn("Entry",   width="small",  format="$%.2f"),
+            "sl":              st.column_config.NumberColumn("Stop-Loss",width="small",  format="$%.2f"),
+            "target":          st.column_config.NumberColumn("Target",  width="small",  format="$%.2f"),
+        },
+    )
     if "llm_reason" in signal_frame.columns:
         st.subheader("AI Signal Reasoning")
         for _, row in signal_frame.iterrows():
             color = "🟢" if row['signal'] == 'BUY' else "🔴" if row['signal'] == 'SELL' else "🟡"
             st.markdown(f"{color} **{row['symbol']} — {row['signal']}** ({row['confidence']:.1%} confidence): {row['llm_reason']}")
+
+    if signals and signals[0].get("news_headlines"):
+        st.subheader("Live AMD News Feed")
+        sig = signals[0]
+        sentiment_val = sig.get("sentiment", "NEUTRAL")
+        score_val = sig.get("sentiment_score", 0.0)
+        news_color = "🟢" if sentiment_val == "POSITIVE" else "🔴" if sentiment_val == "NEGATIVE" else "🟡"
+        for headline in sig["news_headlines"]:
+            st.markdown(f"{news_color} {headline} — *score: {score_val:+.4f}*")
 
     st.subheader("Headline Sentiment")
     if sentiment_frame.empty:
@@ -118,7 +143,20 @@ def render_dashboard(
                 title="Market Batch Throughput",
             )
             st.plotly_chart(fig, use_container_width=True)
-            st.dataframe(market_records, use_container_width=True, hide_index=True)
+            st.dataframe(
+                market_records,
+                use_container_width=True,
+                hide_index=True,
+                height=120,
+                column_config={
+                    "device_type":                  st.column_config.TextColumn("Device",      width="small"),
+                    "device":                       st.column_config.TextColumn("HW",          width="small"),
+                    "batch_size":                   st.column_config.NumberColumn("Batch",     width="small",  format="%d"),
+                    "avg_latency_ms":               st.column_config.NumberColumn("Latency ms",width="small",  format="%.4f"),
+                    "throughput_signals_per_second": st.column_config.NumberColumn("Signals/s", width="medium", format="%.0f"),
+                    "wall_time_s":                  st.column_config.NumberColumn("Wall s",    width="small",  format="%.3f"),
+                },
+            )
     with perf_right:
         if sentiment_records_df.empty:
             st.info("Sentiment benchmark data unavailable.")
@@ -131,7 +169,21 @@ def render_dashboard(
                 title="Sentiment Batch Throughput",
             )
             st.plotly_chart(fig, use_container_width=True)
-            st.dataframe(sentiment_records_df, use_container_width=True, hide_index=True)
+            st.dataframe(
+                sentiment_records_df,
+                use_container_width=True,
+                hide_index=True,
+                height=120,
+                column_config={
+                    "device_type":                      st.column_config.TextColumn("Device",       width="small"),
+                    "available":                        st.column_config.CheckboxColumn("Avail.",    width="small"),
+                    "device":                           st.column_config.TextColumn("HW",           width="small"),
+                    "backend":                          st.column_config.TextColumn("Backend",      width="medium"),
+                    "single_latency_ms":                st.column_config.NumberColumn("Single ms",  width="small",  format="%.4f"),
+                    "batch_latency_ms":                 st.column_config.NumberColumn("Batch ms",   width="small",  format="%.4f"),
+                    "batch_throughput_texts_per_second": st.column_config.NumberColumn("Texts/s",   width="medium", format="%.0f"),
+                },
+            )
 
     st.subheader("Trade Lifecycle")
     if trade_frame.empty:
