@@ -9,3 +9,4 @@ streamlit_stderr.log
 streamlit_job.log
 models/sentiment-distilbert/
 data/simulated_trades.json
+.env

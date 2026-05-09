@@ -1,24 +1,13 @@
 [
   {
-    "symbol": "AMDDEMO",
+    "symbol": "AMD",
     "signal": "BUY",
-    "entry": 102.6,
-    "sl": 101.57,
-    "target": 104.14,
-    "confidence": 0.3986,
-    "sentiment": "POSITIVE",
-    "sentiment_score": 0.4333,
-    "sentiment_adjustment": 0.052
-  },
-  {
-    "symbol": "GPUDEMO",
-    "signal": "BUY",
-    "entry": 221.2,
-    "sl": 218.99,
-    "target": 224.52,
-    "confidence": 0.3519,
+    "confidence": 0.9,
     "sentiment": "NEUTRAL",
     "sentiment_score": 0.0,
-    "sentiment_adjustment": 0.0
+    "entry": 455.19,
+    "sl": 450.64,
+    "target": 462.02,
+    "llm_reason": "The BUY signal for AMD was generated due to a high confidence level of 90.0%, indicating strong technical indicators suggesting a potential upward move. Despite a NEUTRAL sentiment score, the entry price of $455.19, with a stop-loss at $450.64 and target at $462.02, reflects a calculated risk-reward setup based on identified support and resistance levels."
   }
 ]

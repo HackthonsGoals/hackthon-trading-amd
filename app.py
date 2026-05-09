@@ -21,7 +21,10 @@ TRADES_PATH = BASE_DIR / "data" / "simulated_trades.json"
 SENTIMENT_MODEL_PATH = BASE_DIR / "models" / "sentiment-distilbert"
 
 
+from streamlit_autorefresh import st_autorefresh
+
 def main() -> None:
+    st_autorefresh(interval=60000, key="data_refresh")
     market_data = load_market_data(DATA_PATH)
     headlines = load_headlines(HEADLINES_PATH)
 
@@ -47,6 +50,8 @@ def main() -> None:
 
     inference = run_batch_inference(market_data, prefer_gpu=True)
     signals = generate_dummy_signals(market_data, inference.probabilities, sentiment_by_symbol)
+    from engine.llm_reasoner import explain_signals_batch
+    signals = explain_signals_batch(signals)
 
     SIGNALS_PATH.write_text(json.dumps(signals, indent=2), encoding="utf-8")
 

@@ -29,6 +29,7 @@ def render_dashboard(
 ) -> None:
     st.set_page_config(page_title="AMD AI Trading Demo", layout="wide")
     st.title("AMD GPU-Accelerated AI Signal Pipeline")
+    st.caption('Agentic Pipeline: Signal Agent → Sentiment Agent → Reasoning Agent (Qwen3-8B on AMD)')
     st.caption(
         "Open-weight sentiment + batch inference + fake execution. Built for AMD GPU visibility, not real trading."
     )
@@ -47,6 +48,11 @@ def render_dashboard(
 
     st.subheader("Live Signals")
     st.dataframe(_style_signals(signal_frame), use_container_width=True, hide_index=True)
+    if "llm_reason" in signal_frame.columns:
+        st.subheader("AI Signal Reasoning")
+        for _, row in signal_frame.iterrows():
+            color = "🟢" if row['signal'] == 'BUY' else "🔴" if row['signal'] == 'SELL' else "🟡"
+            st.markdown(f"{color} **{row['symbol']} — {row['signal']}** ({row['confidence']:.1%} confidence): {row['llm_reason']}")
 
     st.subheader("Headline Sentiment")
     if sentiment_frame.empty:
