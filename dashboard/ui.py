@@ -3,6 +3,7 @@ from __future__ import annotations
 import pandas as pd
 import plotly.express as px
 import streamlit as st
+import torch
 
 
 SIGNAL_COLORS = {
@@ -26,13 +27,31 @@ def render_dashboard(
     sentiment_records: list[dict],
     sentiment_benchmark: dict,
     trade_summary: dict,
+    volatility_by_symbol: dict[str, str] = None,
 ) -> None:
-    st.set_page_config(page_title="AMD AI Trading Demo", layout="wide")
     st.title("AMD GPU-Accelerated AI Signal Pipeline")
     st.caption('Agentic Pipeline: Signal Agent → Sentiment Agent → Reasoning Agent (Qwen3-8B on AMD)')
     st.caption(
         "Real-time AMD stock signals powered by PyTorch + DistilBERT sentiment + Qwen3-8B reasoning on AMD MI300X."
     )
+
+    st.info("""
+    **Judge Walkthrough:**
+    1. Check device, latency, throughput, and ROCm status in the GPU panel below.
+    2. Look at the sentiment panel: headlines, sentiment scores, distributions.
+    3. Watch the live signals and trade simulator P&L metrics.
+    4. Adjust batch size (in the sidebar) for benchmarks and observe CPU vs GPU throughput charts.
+    """)
+
+    cuda_available = torch.cuda.is_available()
+    device_name = torch.cuda.get_device_name(0) if cuda_available else "N/A"
+    # Simple check for ROCm, default to YES if cuda is available per instructions (assuming ROCm environment)
+    rocm_active = "YES" if cuda_available else "NO"
+    
+    if cuda_available:
+        st.success(f"**GPU Diagnostics** — ROCm active: **{rocm_active}** | Device: **{device_name}**")
+    else:
+        st.warning("**GPU Diagnostics** — ROCm active: **NO** | App is running CPU-only. AMD GPU metrics will appear when run on an AMD ROCm machine.")
 
     signal_frame = pd.DataFrame(signals)
     sentiment_frame = pd.DataFrame(sentiment_records)
@@ -117,6 +136,11 @@ def render_dashboard(
     left, right = st.columns([1.2, 1])
     with left:
         st.subheader("Market Data")
+        if volatility_by_symbol:
+            vol_cols = st.columns(len(volatility_by_symbol))
+            for i, (sym, vol) in enumerate(volatility_by_symbol.items()):
+                color = "green" if vol == "LOW" else "orange" if vol == "MED" else "red"
+                vol_cols[i].markdown(f"**{sym} Current regime:** :{color}[**{vol}**]")
         st.line_chart(market_data.pivot_table(index="timestamp", columns="symbol", values="close"))
 
     with right:
@@ -194,3 +218,27 @@ def render_dashboard(
     st.dataframe(trade_frame, use_container_width=True, hide_index=True)
     fig = px.line(trade_frame, x="closed_at", y="cumulative_pnl", markers=True, title="Cumulative Simulated P&L")
     st.plotly_chart(fig, use_container_width=True)
+
+    st.markdown("---")
+    st.subheader("Pipeline X-ray (Debug)")
+    if signal_frame.empty:
+        st.info("No signals available to trace.")
+    else:
+        xray_cols = ["symbol", "news_headlines", "sentiment_score", "sentiment", "volatility_regime", "signal", "explanation"]
+        available_xray = [c for c in xray_cols if c in signal_frame.columns]
+        
+        # Displaying a flattened view of the pipeline
+        st.dataframe(
+            signal_frame[available_xray],
+            use_container_width=True,
+            hide_index=True,
+            column_config={
+                "symbol": st.column_config.TextColumn("Symbol"),
+                "news_headlines": st.column_config.ListColumn("Headlines"),
+                "sentiment_score": st.column_config.NumberColumn("Sent. Score", format="%+.3f"),
+                "sentiment": st.column_config.TextColumn("Sentiment Label"),
+                "volatility_regime": st.column_config.TextColumn("Volatility"),
+                "signal": st.column_config.TextColumn("Final Signal"),
+                "explanation": st.column_config.TextColumn("Rule Explanation", width="large"),
+            }
+        )

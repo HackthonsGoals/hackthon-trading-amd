@@ -30,10 +30,15 @@ The app demonstrates:
 
 ## Features
 
+- **GPU Diagnostics**: Always-visible hardware context showing ROCm and CUDA availability and device name.
+- **Batch Scaling Experiment**: Dynamic Streamlit control to benchmark CPU vs GPU throughput across multiple batch sizes.
+- **Multi-Model Sentiment Switcher**: Compare baseline models against fine-tuned checkpoints on the fly.
+- **Volatility/Regime Visualization**: Rolling standard deviation classifier feeding directly into dummy signals.
+- **Pipeline X-ray Panel**: A debug view allowing judges to inspect the raw headlines, sentiment, volatility regime, and the final signal explanation.
 - **Live Signal Feed**: color-coded `BUY`, `SELL`, and `HOLD` demo signals.
 - **Sentiment Panel**: headline labels, signed scores, class distribution, and score trend.
 - **Trade Simulation Panel**: fake OPEN-to-CLOSED lifecycle, slippage, P&L, win rate, and average return.
-- **Performance Metrics**: CPU vs GPU latency, 100/1000 sample batch throughput, and speedup ratio.
+- **Performance Metrics**: CPU vs GPU latency, sample batch throughput, and speedup ratio.
 - **IP-Safe Design**: no broker APIs, no credentials, no real strategy, no RL/OpenEnv, no private prompts.
 
 ## Architecture
@@ -41,7 +46,8 @@ The app demonstrates:
 ```text
 Mock OHLCV CSV + sample headlines
   -> PyTorch batch market inference
-  -> Fine-tuned DistilBERT sentiment inference
+  -> Fine-tuned / Baseline DistilBERT sentiment inference
+  -> Volatility / Regime Classification
   -> Sentiment-aware dummy signal generator
   -> Fake execution simulator
   -> Streamlit dashboard

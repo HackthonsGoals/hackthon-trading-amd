@@ -19,7 +19,7 @@ def _get_analyzer() -> SentimentAnalyzer:
     return _analyzer
 
 
-def _signal_for_ticker(symbol: str) -> dict | None:
+def _signal_for_ticker(symbol: str, analyzer: SentimentAnalyzer | None = None, volatility: str = "MED") -> dict | None:
     ticker = yf.Ticker(symbol)
     df = ticker.history(period="30d")
 
@@ -42,7 +42,8 @@ def _signal_for_ticker(symbol: str) -> dict | None:
     # ── Run headlines through SentimentAnalyzer ──────────────────────────
     avg_sentiment_score = 0.0
     if headlines:
-        predictions = _get_analyzer().predict_batch(headlines)
+        actual_analyzer = analyzer if analyzer is not None else _get_analyzer()
+        predictions = actual_analyzer.predict_batch(headlines)
         signed_scores = [sentiment_score(p) for p in predictions]
         avg_sentiment_score = sum(signed_scores) / len(signed_scores)
 
@@ -63,6 +64,15 @@ def _signal_for_ticker(symbol: str) -> dict | None:
 
     base_confidence = min(0.9, max(0.3, 0.3 + abs(ret_3d) * 10))
     sentiment_nudge = max(min(avg_sentiment_score * 0.1, 0.1), -0.1)
+    
+    # Apply volatility regime penalty
+    if volatility == "HIGH":
+        if signal in ["BUY", "SELL"]:
+            # Reduce confidence in high volatility and maybe downgrade to HOLD
+            base_confidence -= 0.1
+            if base_confidence < 0.4:
+                signal = "HOLD"
+
     confidence = min(0.9, max(0.3, base_confidence + sentiment_nudge))
 
     # ── Price levels ─────────────────────────────────────────────────────
@@ -78,6 +88,8 @@ def _signal_for_ticker(symbol: str) -> dict | None:
         sl = entry
         target = entry
 
+    explanation = f"{sentiment_label} sentiment ({avg_sentiment_score:+.2f}) + {volatility} volatility \u2192 {signal} (demo rule)"
+
     return {
         "symbol": symbol,
         "signal": signal,
@@ -88,6 +100,8 @@ def _signal_for_ticker(symbol: str) -> dict | None:
         "sl": round(sl, 2),
         "target": round(target, 2),
         "news_headlines": headlines,
+        "volatility_regime": volatility,
+        "explanation": explanation,
     }
 
 
@@ -95,10 +109,14 @@ def generate_dummy_signals(
     frame: pd.DataFrame,
     probabilities: np.ndarray,
     sentiment_by_symbol: dict[str, dict] | None = None,
+    analyzer: SentimentAnalyzer | None = None,
+    volatility_by_symbol: dict[str, str] | None = None,
 ) -> list[dict]:
     results = []
+    volatility_by_symbol = volatility_by_symbol or {}
     for symbol in ("AMD", "NVDA"):
-        sig = _signal_for_ticker(symbol)
+        volatility = volatility_by_symbol.get(symbol, "MED")
+        sig = _signal_for_ticker(symbol, analyzer=analyzer, volatility=volatility)
         if sig is not None:
             results.append(sig)
     return results
