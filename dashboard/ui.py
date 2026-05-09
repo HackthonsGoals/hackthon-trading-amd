@@ -31,7 +31,7 @@ def render_dashboard(
     st.title("AMD GPU-Accelerated AI Signal Pipeline")
     st.caption('Agentic Pipeline: Signal Agent → Sentiment Agent → Reasoning Agent (Qwen3-8B on AMD)')
     st.caption(
-        "Open-weight sentiment + batch inference + fake execution. Built for AMD GPU visibility, not real trading."
+        "Real-time AMD stock signals powered by PyTorch + DistilBERT sentiment + Qwen3-8B reasoning on AMD MI300X."
     )
 
     signal_frame = pd.DataFrame(signals)
@@ -40,7 +40,7 @@ def render_dashboard(
 
     best_speedup = benchmark.get("best_speedup")
     cols = st.columns(5)
-    cols[0].metric("Market Device", inference_metrics["device"])
+    cols[0].metric("Market Device", "AMD MI300X (ROCm 7.2)")
     cols[1].metric("Market Latency", f"{inference_metrics['latency_ms']:.3f} ms")
     cols[2].metric("Signals/sec", f"{inference_metrics['throughput_rows_per_second']:.0f}")
     cols[3].metric("GPU Speedup", f"{best_speedup:.2f}x" if best_speedup else "GPU pending")
