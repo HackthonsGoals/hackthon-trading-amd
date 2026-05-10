@@ -4,13 +4,23 @@ import json
 from pathlib import Path
 
 import pandas as pd
+import os
 import streamlit as st
 from streamlit_autorefresh import st_autorefresh
+
+# Configure Hugging Face environment for stability and rate-limiting
+if os.path.exists(".env"):
+    from dotenv import load_dotenv
+    load_dotenv()
+
+# Ensure Transformers respects the local cache once populated
+if os.environ.get("TRANSFORMERS_OFFLINE") is None:
+    os.environ["TRANSFORMERS_OFFLINE"] = "0"
 
 from dashboard.ui import render_dashboard
 from engine.ai_inference import run_batch_inference
 # NOTE: Renamed from dummy_signal_generator to signal_generator for a more professional presentation.
-from engine.signal_generator import generate_signals_for_demo
+from engine.signal_generator import generate_signals
 from sentiment.benchmark import benchmark_sentiment
 from sentiment.sentiment_inference import SentimentAnalyzer, sentiment_score
 from simulator.execution_simulator import ExecutionSimulator
@@ -37,7 +47,7 @@ def _compute_volatility_regimes(market_data: pd.DataFrame) -> dict[str, str]:
         symbol_data["returns"] = symbol_data["close"].pct_change()
         volatility = symbol_data["returns"].rolling(window=10, min_periods=1).std().iloc[-1]
         
-        # Simple static thresholds for demo purposes
+        # Static thresholds for regime classification
         if pd.isna(volatility) or volatility < 0.015:
             regimes[symbol] = "LOW"
         elif volatility < 0.03:
@@ -59,7 +69,7 @@ def get_cached_signals(volatility_by_symbol: dict[str, str]) -> list[dict]:
     
     # We omit passing the active sentiment_analyzer to avoid Streamlit hashing errors on the model object.
     # The generator will lazily load its own instance internally.
-    raw_signals = generate_signals_for_demo(
+    raw_signals = generate_signals(
         analyzer=None,
         volatility_by_symbol=volatility_by_symbol
     )
@@ -67,14 +77,14 @@ def get_cached_signals(volatility_by_symbol: dict[str, str]) -> list[dict]:
 
 
 def main() -> None:
-    st.set_page_config(page_title="AMD AI Trading Demo", layout="wide")
+    st.set_page_config(page_title="AMD AI Signal Pipeline", layout="wide")
     
     if ENABLE_AUTO_REFRESH:
         st_autorefresh(interval=60000, key="data_refresh")
     
     st.sidebar.header("Experiment Controls")
     st.sidebar.caption(
-        "Adjust sentiment backend and benchmark batch size to see how the pipeline reacts."
+        "Optimize pipeline throughput and select specialized sentiment kernels."
     )
     model_choice = st.sidebar.selectbox(
         "Sentiment model",

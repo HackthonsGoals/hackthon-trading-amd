@@ -3,8 +3,8 @@ from __future__ import annotations
 """
 Simulated / proof-of-concept signal generator.
 These are NOT real trading signals. They combine 30-day price momentum,
-recent news sentiment, and static volatility regimes to emit demo BUY/SELL/HOLD labels
-for UI demonstration purposes only.
+recent news sentiment, and static volatility regimes to emit BUY/SELL/HOLD labels
+for inference visualization purposes only.
 """
 
 from pathlib import Path
@@ -95,7 +95,7 @@ def _signal_for_ticker(symbol: str, analyzer: SentimentAnalyzer | None = None, v
         sl = entry
         target = entry
 
-    explanation = f"{sentiment_label} sentiment ({avg_sentiment_score:+.2f}) + {volatility} volatility \u2192 {signal} (demo rule)"
+    explanation = f"{sentiment_label} sentiment ({avg_sentiment_score:+.2f}) + {volatility} volatility \u2192 {signal} (rule-based)"
 
     return {
         "symbol": symbol,
@@ -112,7 +112,7 @@ def _signal_for_ticker(symbol: str, analyzer: SentimentAnalyzer | None = None, v
     }
 
 
-def generate_signals_for_demo(
+def generate_signals(
     analyzer: SentimentAnalyzer | None = None,
     volatility_by_symbol: dict[str, str] | None = None,
 ) -> list[dict]:

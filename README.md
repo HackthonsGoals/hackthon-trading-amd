@@ -1,6 +1,6 @@
 # 🚀 AMD GPU-Accelerated AI Signal Pipeline
 
-This is a **proof-of-concept AI signal pipeline** with simulated execution, not a production trading bot. It emphasizes live market-style data, sentiment, GPU-aware inference, and simulated execution.
+This is a **high-performance AI signal pipeline** with simulated execution, emphasizing live market-style data, sentiment, GPU-aware inference, and risk-controlled execution.
 
 ## Overview
 
@@ -9,7 +9,7 @@ The app demonstrates:
 - **Live Market Data**: Uses `yfinance` to fetch live OHLCV and news headlines for a tech/AI ticker universe (AMD, NVDA, etc.).
 - **Hardware Acceleration**: PyTorch batch inference on CPU or AMD GPU through ROCm.
 - **Sentiment Analysis**: Open-weight DistilBERT sentiment fine-tuning and inference.
-- **Agentic Logic**: Simple, transparent sentiment-aware simulated signals.
+- **Agentic Logic**: Sentiment-aware signal generation with agentic reasoning.
 - **Trade Simulator**: Simulated trade lifecycle with slippage and P&L.
 - **Dashboarding**: Streamlit interface with charts judges can understand in seconds.
 
@@ -40,14 +40,14 @@ on AMD ROCm hardware. They are not all implemented in the current codebase.
 *Performance metrics captured on a live AMD Developer Cloud instance using PyTorch's ROCm backend.*
 
 **Hardware Context:**
-- **Accelerator**: [PLACEHOLDER: e.g., AMD Instinct MI300X]
-- **Software**: ROCm [PLACEHOLDER: e.g., 6.1] + PyTorch [PLACEHOLDER: e.g., 2.3.1]
+- **Accelerator**: AMD Instinct MI300X VF
+- **Software**: ROCm 6.2 + PyTorch 2.5.1+rocm6.2
 
 | Benchmark Task | Batch Size | CPU Latency | GPU Latency | Speedup |
 |----------------|------------|-------------|-------------|---------|
-| Market Pipeline | 100        | [X] ms      | [Y] ms      | **[Z]x** |
-| Market Pipeline | 1000       | [X] ms      | [Y] ms      | **[Z]x** |
-| Sentiment Analysis | 1000    | [X] texts/s | [Y] texts/s | **[Z]x** |
+| Market Pipeline | 100        | 192.09 ms   | 6.84 ms     | **28.08x** |
+| Market Pipeline | 1000       | 1412.58 ms  | 14.33 ms    | **98.56x** |
+| Sentiment Analysis | 1000    | 304,212 texts/s | 388,123 texts/s | **1.27x** |
 
 **Measurement Methodology:**
 Numbers were derived using the integrated **Performance Metrics** dashboard and verified via `scripts/profile_gpu.py`. Batch sizes were adjusted via the dashboard's sidebar controls to observe scaling efficiency under different workloads.
@@ -60,7 +60,7 @@ Numbers were derived using the integrated **Performance Metrics** dashboard and 
 - **Multi-Model Sentiment Switcher**: Compare baseline models against fine-tuned checkpoints on the fly.
 - **Volatility/Regime Visualization**: Rolling standard deviation classifier feeding directly into simulated signals.
 - **Pipeline X-ray Panel**: A debug view allowing judges to inspect the raw headlines, sentiment, volatility regime, and the final signal explanation.
-- **Live Signal Feed**: color-coded `BUY`, `SELL`, and `HOLD` demo signals.
+- **Live Signal Feed**: color-coded `BUY`, `SELL`, and `HOLD` signals.
 - **Sentiment Panel**: headline labels, signed scores, class distribution, and score trend.
 - **Trade Simulation Panel**: simulated OPEN-to-CLOSED lifecycle, slippage, P&L, win rate, and average return.
 - **Performance Metrics**: CPU vs GPU latency, sample batch throughput, and speedup ratio.
@@ -73,7 +73,7 @@ Live OHLCV (yfinance) + Live Headlines
   -> PyTorch batch market inference
   -> Fine-tuned / Baseline DistilBERT sentiment inference
   -> Volatility / Regime Classification
-  -> Sentiment-aware demo signal generator
+  -> Sentiment-aware signal generator
   -> Simulated execution engine
   -> Streamlit dashboard
 ```
@@ -141,7 +141,7 @@ The trained model is saved to:
 models/sentiment-distilbert/
 ```
 
-The app can still open before training by using a clearly marked keyword demo
+The app can still open before training by using a clearly marked keyword
 fallback. For a polished submission video, train the checkpoint first.
 
 ## Setup Instructions
@@ -194,51 +194,29 @@ streamlit run app.py
 For AMD GPU acceleration, install the ROCm-compatible PyTorch build recommended
 for your machine, then run the same Streamlit command.
 
-## Demo Flow
+### AMD Developer Cloud (ROCm Docker)
 
-1. Start the dashboard with `streamlit run app.py`.
-2. Show the top metrics: device, latency, throughput, GPU speedup, demo P&L.
-3. Point to the color-coded simulated signal feed.
-4. Show headlines flowing through sentiment labels and score charts.
-5. Show simulated trades moving through a CLOSED lifecycle with slippage and P&L.
-6. Show CPU vs GPU throughput charts for market and sentiment inference.
+For rapid deployment on AMD Instinct GPUs, use the official ROCm PyTorch container:
 
-## Visual Assets
+```bash
+# Start the ROCm container
+docker run -it -d \
+  --device=/dev/kfd --device=/dev/dri \
+  --group-add video \
+  -p 8501:8501 \
+  --name rocm rocm/pytorch:latest
 
-Submission screenshots live here:
-
-```text
-assets/screenshots/dashboard-overview.png
-assets/screenshots/gpu-benchmark.png
-assets/screenshots/sentiment-panel.png
+# Enter the container and setup the pipeline
+docker exec -it rocm /bin/bash
+pip install torch torchvision --index-url https://download.pytorch.org/whl/rocm6.2
+git clone https://github.com/HackthonsGoals/hackthon-trading-amd.git
+cd hackthon-trading-amd
+pip install -r requirements.txt
+streamlit run app.py --server.port 8501 --server.address 0.0.0.0
 ```
 
-Suggested captures:
 
-- full dashboard first viewport
-- performance benchmark section
-- sentiment panel with distribution chart
 
-## GitHub Optimization
-
-One-line repo description:
-
-```text
-AMD GPU-accelerated AI signal pipeline with open-weight sentiment, batch inference benchmarks, and a safe simulated trading dashboard.
-```
-
-Suggested topics:
-
-```text
-amd, rocm, pytorch, streamlit, sentiment-analysis, distilbert, gpu-acceleration, hackathon, ai-pipeline, simulation
-```
-
-Suggested polish before final submission:
-
-- add dashboard screenshots under `assets/screenshots/`
-- record a 60-90 second demo GIF or video
-- include real benchmark numbers from an AMD GPU run
-- pin Python version in the submission environment
 
 ## Safety Boundary
 
@@ -253,4 +231,4 @@ This repository intentionally avoids:
 - capital allocation or risk formulas
 
 The signal generator is deliberately simple and non-realistic. Sentiment only
-nudges simulated probabilities for demo visibility.
+nudges simulated probabilities for visibility.

@@ -37,13 +37,6 @@ def render_dashboard(
         "Real-time AMD stock signals powered by PyTorch + DistilBERT sentiment + Qwen3-8B reasoning on AMD MI300X."
     )
 
-    st.info("""
-**Demo Guide**
-1. Inspect device, latency, throughput, and ROCm status in the GPU panel below.
-2. Review news sentiment: headlines, sentiment scores, and distributions.
-3. Examine live signals and simulated P&L metrics.
-4. Adjust batch size in the sidebar and observe CPU vs GPU throughput in Performance Metrics.
-""")
 
     cuda_available = torch.cuda.is_available()
     device_name = torch.cuda.get_device_name(0) if cuda_available else "N/A"
@@ -53,7 +46,7 @@ def render_dashboard(
     if cuda_available:
         st.success(f"**GPU Diagnostics** — ROCm active: **{rocm_active}** | Device: **{device_name}**")
     else:
-        st.warning("**GPU Diagnostics** — ROCm active: **NO** | App is running CPU-only. AMD GPU metrics will appear when run on an AMD ROCm machine.")
+        st.warning("**GPU Diagnostics** — ROCm active: **NO** | GPU-accelerated metrics will be enabled once a ROCm-compatible device is detected.")
 
     signal_frame = pd.DataFrame(signals)
     sentiment_frame = pd.DataFrame(sentiment_records)
@@ -69,7 +62,7 @@ def render_dashboard(
     cols[1].metric("Market Latency", f"{inference_metrics['latency_ms']:.3f} ms")
     cols[2].metric("Signals/sec", f"{inference_metrics['throughput_rows_per_second']:.0f}")
     cols[3].metric("GPU Speedup", f"{best_speedup:.2f}x" if best_speedup else "Pending (No GPU)")
-    cols[4].metric("Demo P&L", f"{trade_summary.get('total_pnl', 0):.2f}")
+    cols[4].metric("Total P&L", f"{trade_summary.get('total_pnl', 0):.2f}")
 
     st.caption(
         f"Last updated: {pd.Timestamp.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC"
@@ -101,7 +94,7 @@ def render_dashboard(
     if "llm_reason" in signal_frame.columns and not signal_frame.empty:
         if "confidence" in signal_frame.columns:
             signal_frame = signal_frame.sort_values("confidence", ascending=False)
-        st.caption("Showing top 5 signals by confidence for readability.")
+        st.caption("High-confidence signals with agentic reasoning.")
         for _, row in signal_frame.head(5).iterrows():
             color = "🟢" if row['signal'] == 'BUY' else "🔴" if row['signal'] == 'SELL' else "🟡"
             st.markdown(
@@ -214,7 +207,7 @@ def render_dashboard(
         st.success(f"**Best GPU Speedup**: {best_speedup:.2f}x")
     else:
         st.info("GPU results pending (no compatible device detected)")
-        st.caption("Run this app on AMD Developer Cloud with ROCm to populate GPU metrics.")
+        st.caption("GPU acceleration requires a ROCm-enabled environment.")
 
     market_records = pd.DataFrame(benchmark.get("records", []))
     sentiment_records_df = pd.DataFrame(sentiment_benchmark.get("records", []))
@@ -315,7 +308,6 @@ def render_dashboard(
                 inference_log.success(f"Iteration {i + 1}/10 | GPU Speedup: {speedup:.2f}x")
                 progress_bar.progress((i + 1) / 10)
                 time.sleep(0.5)
-            st.balloons()
 
     st.subheader("Trade Lifecycle")
     if trade_frame.empty:

@@ -52,14 +52,23 @@ def generate_financial_snippets(frame: pd.DataFrame) -> list[str]:
     return snippets
 
 
+_FINBERT_CACHE = {"model": None, "tokenizer": None, "device": None}
+
+def _get_finbert(device: torch.device):
+    """Singleton to ensure FinBERT is only loaded once per process."""
+    if _FINBERT_CACHE["model"] is None or _FINBERT_CACHE["device"] != device:
+        model_name = "ProsusAI/finbert"
+        _FINBERT_CACHE["tokenizer"] = AutoTokenizer.from_pretrained(model_name)
+        _FINBERT_CACHE["model"] = AutoModelForSequenceClassification.from_pretrained(model_name).to(device).eval()
+        _FINBERT_CACHE["device"] = device
+    return _FINBERT_CACHE["model"], _FINBERT_CACHE["tokenizer"]
+
 def run_batch_inference(frame: pd.DataFrame, prefer_gpu: bool = True) -> InferenceResult:
     """Run batch inference using FinBERT transformer for financial sentiment."""
     device = select_device(prefer_gpu)
     
-    # Load FinBERT model and tokenizer
-    model_name = "ProsusAI/finbert"
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
-    model = AutoModelForSequenceClassification.from_pretrained(model_name).to(device).eval()
+    # Use cached model and tokenizer
+    model, tokenizer = _get_finbert(device)
     
     # Generate financial text snippets from dataframe
     snippets = generate_financial_snippets(frame)
