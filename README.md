@@ -30,7 +30,6 @@ The app demonstrates:
 The items below describe stretch-goal and roadmap optimizations that can be enabled
 on AMD ROCm hardware. They are not all implemented in the current codebase.
 
-- **FinBERT Transformer Integration**: Upgrading sentiment analysis to a domain-specific financial transformer for higher signal precision.
 - **Mixed Precision (AMP)**: Implementing AMD ROCm-optimized FP16 inference via `torch.cuda.amp` to achieve ~2x memory efficiency.
 - **Quantization (INT8/FP8)**: Exploring weight quantization for LLM reasoning to maximize throughput on MI300X/MI210 hardware.
 - **Multi-GPU Parallelism**: Distributing batch inference across multiple AMD accelerators using DataParallel.
