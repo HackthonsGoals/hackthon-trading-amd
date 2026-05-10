@@ -89,7 +89,7 @@ def render_dashboard(
         column_config={
             "symbol":          st.column_config.TextColumn("Symbol",    width="small"),
             "signal":          st.column_config.TextColumn("Signal",    width="small"),
-            "confidence":      st.column_config.NumberColumn("Conf.",   width="small",  format="%.1%%"),
+            "confidence":      st.column_config.NumberColumn("Conf.",   width="small",  format="%.1f%%"),
             "sentiment":       st.column_config.TextColumn("Sentiment", width="medium"),
             "sentiment_score": st.column_config.NumberColumn("Sent. Score", width="small", format="%+.3f"),
             "volatility":      st.column_config.TextColumn("Volatility", width="small"),
@@ -186,7 +186,7 @@ def render_dashboard(
             column_config={
                 "symbol": st.column_config.TextColumn("symbol", width="small"),
                 "signal": st.column_config.TextColumn("signal", width="small"),
-                "confidence": st.column_config.NumberColumn("confidence", width="small", format="%.2%%"),
+                "confidence": st.column_config.NumberColumn("confidence", width="small", format="%.2f%%"),
                 "sentiment": st.column_config.TextColumn("sentiment", width="small"),
             },
         )
