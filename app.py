@@ -26,7 +26,7 @@ TRADES_PATH = BASE_DIR / "data" / "simulated_trades.json"
 SENTIMENT_MODEL_PATH = BASE_DIR / "models" / "sentiment-distilbert"
 
 # Toggle this to True before final demo. Kept False for local dev so Streamlit doesn't refresh constantly.
-ENABLE_AUTO_REFRESH = False  
+ENABLE_AUTO_REFRESH = True  
 
 
 def _compute_volatility_regimes(market_data: pd.DataFrame) -> dict[str, str]:
