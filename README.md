@@ -45,9 +45,9 @@ on AMD ROCm hardware. They are not all implemented in the current codebase.
 
 | Benchmark Task | Batch Size | CPU Latency | GPU Latency | Speedup |
 |----------------|------------|-------------|-------------|---------|
-| Market Pipeline | 100        | 192.09 ms   | 6.84 ms     | **28.08x** |
-| Market Pipeline | 1000       | 1412.58 ms  | 14.33 ms    | **98.56x** |
-| Sentiment Analysis | 1000    | 304,212 texts/s | 388,123 texts/s | **1.27x** |
+| Market Pipeline | 100        | 104.64 ms   | 6.16 ms     | **17.0x** |
+| Market Pipeline | 1000       | 1342.15 ms  | 6.45 ms     | **208.0x** |
+| Sentiment Analysis | 1000    | 93.5 ms     | 6.5 ms      | **14.49x** |
 
 **Measurement Methodology:**
 Numbers were derived using the integrated **Performance Metrics** dashboard and verified via `scripts/profile_gpu.py`. Batch sizes were adjusted via the dashboard's sidebar controls to observe scaling efficiency under different workloads.
