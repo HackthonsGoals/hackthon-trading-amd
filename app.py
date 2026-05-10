@@ -47,7 +47,6 @@ def _compute_volatility_regimes(market_data: pd.DataFrame) -> dict[str, str]:
     return regimes
 
 
-# Caching this resource is critical so we don't reload the 250MB DistilBERT weights on every UI interaction.
 @st.cache_resource(show_spinner="Loading sentiment model...")
 def get_sentiment_analyzer(model_path: str, prefer_gpu: bool = True) -> SentimentAnalyzer:
     """Return a cached SentimentAnalyzer instance to avoid reloading weights every rerun."""
@@ -73,21 +72,29 @@ def main() -> None:
     if ENABLE_AUTO_REFRESH:
         st_autorefresh(interval=60000, key="data_refresh")
     
-    st.sidebar.header("Lab Controls")
-    model_choice = st.sidebar.selectbox("Sentiment model", ["Fine-tuned", "Baseline"])
+    st.sidebar.header("Experiment Controls")
+    st.sidebar.caption(
+        "Adjust sentiment backend and benchmark batch size to see how the pipeline reacts."
+    )
+    model_choice = st.sidebar.selectbox(
+        "Sentiment model",
+        ["Fine-tuned", "Baseline"],
+        help="Compare the custom fine-tuned DistilBERT checkpoint with the generic baseline model."
+    )
     active_model_path = SENTIMENT_MODEL_PATH if model_choice == "Fine-tuned" else "distilbert-base-uncased"
     
     max_batch_size = st.sidebar.select_slider(
         "Max Batch Size (Benchmark)",
         options=[50, 100, 250, 500, 1000],
-        value=500
+        value=500,
+        help="Upper limit for benchmark batch sizes used in the Performance Metrics section."
     )
     
     market_data = load_market_data(DATA_PATH)
     headlines = load_headlines(HEADLINES_PATH)
     volatility_by_symbol = _compute_volatility_regimes(market_data)
 
-    sentiment_analyzer = get_sentiment_analyzer(active_model_path, prefer_gpu=True)
+    sentiment_analyzer = get_sentiment_analyzer(str(active_model_path), prefer_gpu=True)
     sentiment_predictions = sentiment_analyzer.predict_batch(headlines["text"].tolist())
     sentiment_records = []
     for headline, prediction in zip(headlines.to_dict("records"), sentiment_predictions):
@@ -126,7 +133,7 @@ def main() -> None:
         batch_sizes_to_run = [max_batch_size]
         
     benchmark = benchmark_inference(market_data, batch_sizes=tuple(batch_sizes_to_run))
-    sentiment_benchmark = benchmark_sentiment(headlines["text"].tolist(), active_model_path)
+    sentiment_benchmark = benchmark_sentiment(headlines["text"].tolist(), str(active_model_path))
     
     render_dashboard(
         market_data,

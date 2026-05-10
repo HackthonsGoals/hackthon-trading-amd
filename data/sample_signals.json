@@ -17,7 +17,7 @@
     ],
     "volatility_regime": "MED",
     "explanation": "POSITIVE sentiment (+0.13) + MED volatility \u2192 BUY (demo rule)",
-    "llm_reason": "The BUY signal for AMD was generated due to strong positive sentiment (+0.1300) and high confidence (90.0%), indicating favorable market sentiment and technical alignment. The entry price of $455.19 is supported by a tight stop-loss at $450.64 and a target at $462.02, reflecting a well-defined risk-reward structure."
+    "llm_reason": "The BUY signal for AMD was generated due to strong positive sentiment (+0.1300) and high confidence (90.0%), indicating favorable market sentiment and technical alignment. The entry price of $455.19 is supported by a tight stop-loss at $450.64 and a target at $462.02, reflecting a calculated risk-reward setup."
   },
   {
     "symbol": "NVDA",
@@ -37,7 +37,7 @@
     ],
     "volatility_regime": "MED",
     "explanation": "POSITIVE sentiment (+0.13) + MED volatility \u2192 BUY (demo rule)",
-    "llm_reason": "The BUY signal for NVDA was generated due to strong positive sentiment (+0.1300) and high confidence (90.0%), indicating favorable market sentiment and a strong likelihood of upward movement. The entry price of $215.20, with a stop-loss at $213.05 and target at $218.43, reflects a calculated risk-reward setup based on current market conditions."
+    "llm_reason": "The BUY signal for NVDA was generated due to strong positive sentiment (+0.1300) and high confidence (90.0%), indicating favorable market sentiment and a strong likelihood of upward movement. The entry price of $215.20 targets a potential rise to $218.43, with a stop-loss at $213.05 to manage downside risk."
   },
   {
     "symbol": "MSFT",
@@ -57,7 +57,7 @@
     ],
     "volatility_regime": "MED",
     "explanation": "POSITIVE sentiment (+0.13) + MED volatility \u2192 HOLD (demo rule)",
-    "llm_reason": "The trading signal for MSFT recommends holding based on a positive sentiment score of +0.1300, indicating moderate bullish sentiment. However, the low confidence level of 40.4% suggests limited conviction in the signal, and the identical entry, stop-loss, and target prices imply a lack of clear directional bias in the analysis."
+    "llm_reason": "The HOLD signal for MSFT was generated due to a positive sentiment score of +0.1300, indicating moderate bullish sentiment, combined with a confidence level of 40.4%, suggesting a low but present likelihood of a price movement. The identical entry, stop-loss, and target prices suggest a neutral stance with no clear directional bias."
   },
   {
     "symbol": "GOOGL",
@@ -77,7 +77,7 @@
     ],
     "volatility_regime": "MED",
     "explanation": "NEUTRAL sentiment (+0.00) + MED volatility \u2192 BUY (demo rule)",
-    "llm_reason": "The BUY signal for GOOGL was generated due to a technical setup indicating potential upward momentum, with a confidence level of 61.9%. Despite the NEUTRAL sentiment score, the entry price of $400.80 suggests a favorable risk-reward profile, with a stop-loss at $396.79 and a target at $406.81."
+    "llm_reason": "The BUY signal for GOOGL was generated due to a technical setup indicating potential upward momentum, with a confidence level of 61.9%. Despite the NEUTRAL sentiment score, the entry price of $400.80 suggests a balanced risk-reward profile, with a stop-loss at $396.79 and a target at $406.81."
   },
   {
     "symbol": "META",
@@ -117,7 +117,7 @@
     ],
     "volatility_regime": "MED",
     "explanation": "NEUTRAL sentiment (+0.00) + MED volatility \u2192 BUY (demo rule)",
-    "llm_reason": "The BUY signal for TSLA was generated due to a high confidence level of 90.0%, indicating strong technical indicators suggesting a potential upward move. Despite the NEUTRAL sentiment score, the entry price of $428.35, with a stop-loss at $424.07 and a target at $434.78, reflects a calculated risk-reward setup based on identified support and price action."
+    "llm_reason": "The BUY signal for TSLA was generated due to a high confidence level of 90.0%, indicating strong technical indicators suggesting a potential upward move. Despite the NEUTRAL sentiment score, the entry price of $428.35, with a stop-loss at $424.07 and a target at $434.78, reflects a calculated risk-reward setup based on current market conditions."
   },
   {
     "symbol": "INTC",
@@ -137,7 +137,7 @@
     ],
     "volatility_regime": "MED",
     "explanation": "POSITIVE sentiment (+0.13) + MED volatility \u2192 BUY (demo rule)",
-    "llm_reason": "The BUY signal for INTC was generated due to strong positive sentiment (+0.1300) and high confidence (90.0%), indicating favorable market sentiment and a strong likelihood of upward movement. The entry price of $124.92 targets a potential rise to $126.79, with a stop-loss at $123.67 to manage downside risk."
+    "llm_reason": "The BUY signal for INTC was generated due to strong positive sentiment (+0.1300) and high confidence (90.0%), indicating favorable market sentiment and a strong likelihood of upward movement. The entry price of $124.92 is positioned to capitalize on potential gains, with a target at $126.79 and a stop-loss at $123.67 to manage risk."
   },
   {
     "symbol": "AAPL",
@@ -157,6 +157,6 @@
     ],
     "volatility_regime": "MED",
     "explanation": "NEUTRAL sentiment (+0.00) + MED volatility \u2192 BUY (demo rule)",
-    "llm_reason": "The BUY signal for AAPL was generated based on a 62.2% confidence level, indicating a moderate likelihood of a price increase. The NEUTRAL sentiment suggests no strong bullish or bearish market sentiment, but the technical setup supports a potential upward move. The entry price of $293.32 targets $297.72 with a stop-loss at $290.39 to manage risk."
+    "llm_reason": "The BUY signal for AAPL was generated based on a 62.2% confidence level, indicating a moderate likelihood of a price increase. The NEUTRAL sentiment suggests no strong bullish or bearish market sentiment, but the technical setup supports a potential upward move. The entry level of $293.32 targets $297.72 with a stop-loss at $290.39 to manage risk."
   }
 ]

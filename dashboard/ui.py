@@ -31,25 +31,6 @@ def render_dashboard(
     trade_summary: dict,
     volatility_by_symbol: dict[str, str] = None,
 ) -> None:
-    # Sidebar Experiment Controls
-    st.sidebar.header("Experiment Controls")
-    st.sidebar.caption(
-        "Adjust sentiment backend and benchmark batch size to see how the pipeline reacts."
-    )
-    
-    st.sidebar.selectbox(
-        "Sentiment model",
-        ["Fine-tuned", "Baseline"],
-        help="Compare the custom fine-tuned DistilBERT checkpoint with the generic baseline model."
-    )
-    
-    st.sidebar.select_slider(
-        "Max Batch Size (Benchmark)",
-        options=[50, 100, 250, 500, 1000],
-        value=500,
-        help="Upper limit for benchmark batch sizes used in the Performance Metrics section."
-    )
-
     st.title("AMD GPU-Accelerated AI Signal Pipeline")
     st.caption('Agentic Pipeline: Signal Agent → Sentiment Agent → Reasoning Agent (Qwen3-8B on AMD)')
     st.caption(
@@ -104,7 +85,7 @@ def render_dashboard(
         _style_signals(signal_frame[_display_cols]),
         use_container_width=True,
         hide_index=True,
-        height=120,
+        height=350,  # Increased to show the full tech sector (8 tickers) without scrolling
         column_config={
             "symbol":          st.column_config.TextColumn("Symbol",    width="small"),
             "signal":          st.column_config.TextColumn("Signal",    width="small"),
@@ -120,8 +101,8 @@ def render_dashboard(
     if "llm_reason" in signal_frame.columns and not signal_frame.empty:
         if "confidence" in signal_frame.columns:
             signal_frame = signal_frame.sort_values("confidence", ascending=False)
-        st.caption("Showing top 3 signals by confidence for readability.")
-        for _, row in signal_frame.head(3).iterrows():
+        st.caption("Showing top 5 signals by confidence for readability.")
+        for _, row in signal_frame.head(5).iterrows():
             color = "🟢" if row['signal'] == 'BUY' else "🔴" if row['signal'] == 'SELL' else "🟡"
             st.markdown(
                 f"{color} **{row['symbol']} — {row['signal']}** "
@@ -293,7 +274,7 @@ def render_dashboard(
                 },
             )
 
-    # --- Live GPU Inference Monitor (Bug 4: moved here from app.py) ---
+    # --- Live GPU Inference Monitor ---
     with st.expander("⚡ Live GPU Inference Monitor", expanded=False):
         st.subheader("⚡ Live GPU Inference Monitor")
         _gpu_col1, _gpu_col2 = st.columns(2)

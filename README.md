@@ -25,9 +25,10 @@ The app demonstrates:
 
 ![Sentiment panel](assets/screenshots/sentiment-panel.png)
 
-## Advanced GPU Optimizations 
+## Advanced GPU Optimizations (Roadmap)
 
-The following features represent the project's technical roadmap and stretch goals for production-grade scaling on AMD hardware. While the current pipeline focuses on stable DistilBERT and Qwen3-8B inference, these optimizations are targeted for future development:
+The items below describe stretch-goal and roadmap optimizations that can be enabled
+on AMD ROCm hardware. They are not all implemented in the current codebase.
 
 - **FinBERT Transformer Integration**: Upgrading sentiment analysis to a domain-specific financial transformer for higher signal precision.
 - **Mixed Precision (AMP)**: Implementing AMD ROCm-optimized FP16 inference via `torch.cuda.amp` to achieve ~2x memory efficiency.
@@ -241,13 +242,15 @@ Suggested polish before final submission:
 
 ## Safety Boundary
 
-To ensure responsible AI development and prevent misuse, this repository intentionally adheres to the following safety boundaries:
+This repository intentionally avoids:
 
-- **No Financial Integration**: Zero connectivity to broker APIs, exchanges, or order management systems.
-- **Simulated Logic Only**: The signal generator and capital allocation formulas are simplified for demonstration purposes and are not suitable for live trading.
-- **Secure Secret Management**: All sensitive credentials (e.g., Fireworks API keys) are managed via local `.env` files that are excluded from version control.
-- **Non-Production Weights**: Uses open-weight models and synthetic training data; no proprietary or restricted model weights are included.
-- **No Capital at Risk**: All P&L, trade execution, and slippage calculations occur within a closed-loop simulation environment.
+- real trading strategy logic
+- broker or exchange integrations
+- committing API keys or secrets (credentials are stored in a local `.env` file which is gitignored and never committed)
+- private prompts
+- production model weights pushed to git
+- RL/OpenEnv code
+- capital allocation or risk formulas
 
 The signal generator is deliberately simple and non-realistic. Sentiment only
 nudges simulated probabilities for demo visibility.

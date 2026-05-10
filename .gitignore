@@ -1,13 +1,31 @@
-.venv/
+# Environment
+.env
+
+# Python
 __pycache__/
 *.pyc
-.pytest_cache/
+*.pyo
+*.pyd
+.Python
+.venv/
+venv/
+env/
+
+# Streamlit
 .streamlit/secrets.toml
-.edge-profile/
-streamlit_stdout.log
-streamlit_stderr.log
-streamlit_job.log
+
+# Model weights (too large for git)
 models/sentiment-distilbert/
-data/simulated_trades.json
-.env
+
+# GPU profiling output
 assets/gpu_trace.json
+
+# Screenshots (generated locally)
+# Do NOT ignore assets/screenshots/ — keep that tracked so README images work
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Jupyter
+.ipynb_checkpoints/
