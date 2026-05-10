@@ -6,28 +6,9 @@ from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 import torch
-from torch import nn
-
+from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
 FEATURE_COLUMNS = ["return_1", "range_pct", "volume_z", "close_position"]
-
-
-class DemoInferenceNet(nn.Module):
-    """Tiny untrained neural net for demonstrating batch inference only."""
-
-    def __init__(self, input_dim: int = 4, hidden_dim: int = 32, output_dim: int = 3) -> None:
-        super().__init__()
-        torch.manual_seed(42)
-        self.layers = nn.Sequential(
-            nn.Linear(input_dim, hidden_dim),
-            nn.ReLU(),
-            nn.Linear(hidden_dim, hidden_dim),
-            nn.ReLU(),
-            nn.Linear(hidden_dim, output_dim),
-        )
-
-    def forward(self, features: torch.Tensor) -> torch.Tensor:
-        return self.layers(features)
 
 
 @dataclass
@@ -41,7 +22,6 @@ class InferenceResult:
 
 def select_device(prefer_gpu: bool = True) -> torch.device:
     """Select CUDA/ROCm when available; otherwise use CPU."""
-
     if prefer_gpu and torch.cuda.is_available():
         return torch.device("cuda")
     return torch.device("cpu")
@@ -49,7 +29,6 @@ def select_device(prefer_gpu: bool = True) -> torch.device:
 
 def build_features(frame: pd.DataFrame) -> pd.DataFrame:
     """Create generic, non-proprietary features from OHLCV rows."""
-
     df = frame.sort_values(["symbol", "timestamp"]).copy()
     df["return_1"] = df.groupby("symbol")["close"].pct_change().fillna(0.0)
     df["range_pct"] = ((df["high"] - df["low"]) / df["close"].clip(lower=1e-9)).fillna(0.0)
@@ -61,25 +40,65 @@ def build_features(frame: pd.DataFrame) -> pd.DataFrame:
     return df[FEATURE_COLUMNS].astype("float32")
 
 
+def generate_financial_snippets(frame: pd.DataFrame) -> list[str]:
+    """Generate synthetic financial text from ticker data for transformer inference."""
+    snippets = []
+    for _, row in frame.iterrows():
+        symbol = row.get("symbol", "STOCK")
+        ret = row.get("return_1", 0.0)
+        direction = "surged" if ret > 0.02 else "declined" if ret < -0.02 else "traded flat"
+        snippet = f"{symbol} stock {direction} with volume trends indicating {'bullish' if ret > 0 else 'bearish'} sentiment."
+        snippets.append(snippet)
+    return snippets
+
+
 def run_batch_inference(frame: pd.DataFrame, prefer_gpu: bool = True) -> InferenceResult:
-    """Run a demo batch through a randomly initialized model."""
-
+    """Run batch inference using FinBERT transformer for financial sentiment."""
     device = select_device(prefer_gpu)
-    features = build_features(frame)
-    model = DemoInferenceNet(input_dim=len(FEATURE_COLUMNS)).to(device).eval()
-    tensor = torch.tensor(features.to_numpy(), dtype=torch.float32, device=device)
-
+    
+    # Load FinBERT model and tokenizer
+    model_name = "ProsusAI/finbert"
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    model = AutoModelForSequenceClassification.from_pretrained(model_name).to(device).eval()
+    
+    # Generate financial text snippets from dataframe
+    snippets = generate_financial_snippets(frame)
+    
+    # Tokenize batch
+    inputs = tokenizer(
+        snippets,
+        padding=True,
+        truncation=True,
+        max_length=128,
+        return_tensors="pt"
+    ).to(device)
+    
+    # Benchmark inference
     if device.type == "cuda":
         torch.cuda.synchronize()
+    
     start = time.perf_counter()
+    
     with torch.no_grad():
-        logits = model(tensor)
-        probabilities = torch.softmax(logits, dim=1)
+        if device.type == "cuda":
+            # Use mixed precision for AMD/NVIDIA GPU acceleration
+            with torch.amp.autocast(device_type="cuda"):
+                outputs = model(**inputs)
+                logits = outputs.logits
+                probabilities = torch.softmax(logits, dim=1)
+        else:
+            outputs = model(**inputs)
+            logits = outputs.logits
+            probabilities = torch.softmax(logits, dim=1)
+    
     if device.type == "cuda":
         torch.cuda.synchronize()
+    
     elapsed = max(time.perf_counter() - start, 1e-9)
-
-    labels = ["SELL", "HOLD", "BUY"]
+    
+    # FinBERT labels: positive, negative, neutral
+    labels = ["NEGATIVE", "NEUTRAL", "POSITIVE"]
+    
     return InferenceResult(
         probabilities=probabilities.cpu().numpy(),
         labels=labels,
@@ -87,4 +106,3 @@ def run_batch_inference(frame: pd.DataFrame, prefer_gpu: bool = True) -> Inferen
         latency_ms=elapsed * 1000.0,
         throughput_rows_per_second=len(frame) / elapsed,
     )
-

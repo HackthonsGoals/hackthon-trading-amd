@@ -9,7 +9,8 @@ from streamlit_autorefresh import st_autorefresh
 
 from dashboard.ui import render_dashboard
 from engine.ai_inference import run_batch_inference
-from engine.dummy_signal_generator import generate_dummy_signals
+# NOTE: Renamed from dummy_signal_generator to signal_generator for a more professional presentation.
+from engine.signal_generator import generate_signals_for_demo
 from sentiment.benchmark import benchmark_sentiment
 from sentiment.sentiment_inference import SentimentAnalyzer, sentiment_score
 from simulator.execution_simulator import ExecutionSimulator
@@ -23,6 +24,9 @@ HEADLINES_PATH = BASE_DIR / "data" / "sample_headlines.csv"
 SIGNALS_PATH = BASE_DIR / "data" / "sample_signals.json"
 TRADES_PATH = BASE_DIR / "data" / "simulated_trades.json"
 SENTIMENT_MODEL_PATH = BASE_DIR / "models" / "sentiment-distilbert"
+
+# Toggle this to True before final demo. Kept False for local dev so Streamlit doesn't refresh constantly.
+ENABLE_AUTO_REFRESH = False  
 
 
 def _compute_volatility_regimes(market_data: pd.DataFrame) -> dict[str, str]:
@@ -43,9 +47,31 @@ def _compute_volatility_regimes(market_data: pd.DataFrame) -> dict[str, str]:
     return regimes
 
 
+# Caching this resource is critical so we don't reload the 250MB DistilBERT weights on every UI interaction.
+@st.cache_resource(show_spinner="Loading sentiment model...")
+def get_sentiment_analyzer(model_path: str, prefer_gpu: bool = True) -> SentimentAnalyzer:
+    """Return a cached SentimentAnalyzer instance to avoid reloading weights every rerun."""
+    return SentimentAnalyzer(model_path, prefer_gpu=prefer_gpu)
+
+
+@st.cache_data(ttl=300, show_spinner="Generating signals and LLM explanations...")
+def get_cached_signals(volatility_by_symbol: dict[str, str]) -> list[dict]:
+    from engine.llm_reasoner import explain_signals_batch
+    
+    # We omit passing the active sentiment_analyzer to avoid Streamlit hashing errors on the model object.
+    # The generator will lazily load its own instance internally.
+    raw_signals = generate_signals_for_demo(
+        analyzer=None,
+        volatility_by_symbol=volatility_by_symbol
+    )
+    return explain_signals_batch(raw_signals)
+
+
 def main() -> None:
     st.set_page_config(page_title="AMD AI Trading Demo", layout="wide")
-    st_autorefresh(interval=60000, key="data_refresh")
+    
+    if ENABLE_AUTO_REFRESH:
+        st_autorefresh(interval=60000, key="data_refresh")
     
     st.sidebar.header("Lab Controls")
     model_choice = st.sidebar.selectbox("Sentiment model", ["Fine-tuned", "Baseline"])
@@ -61,7 +87,7 @@ def main() -> None:
     headlines = load_headlines(HEADLINES_PATH)
     volatility_by_symbol = _compute_volatility_regimes(market_data)
 
-    sentiment_analyzer = SentimentAnalyzer(active_model_path, prefer_gpu=True)
+    sentiment_analyzer = get_sentiment_analyzer(active_model_path, prefer_gpu=True)
     sentiment_predictions = sentiment_analyzer.predict_batch(headlines["text"].tolist())
     sentiment_records = []
     for headline, prediction in zip(headlines.to_dict("records"), sentiment_predictions):
@@ -82,15 +108,7 @@ def main() -> None:
     }
 
     inference = run_batch_inference(market_data, prefer_gpu=True)
-    signals = generate_dummy_signals(
-        market_data, 
-        inference.probabilities, 
-        sentiment_by_symbol, 
-        analyzer=sentiment_analyzer,
-        volatility_by_symbol=volatility_by_symbol
-    )
-    from engine.llm_reasoner import explain_signals_batch
-    signals = explain_signals_batch(signals)
+    signals = get_cached_signals(volatility_by_symbol)
 
     SIGNALS_PATH.write_text(json.dumps(signals, indent=2), encoding="utf-8")
 

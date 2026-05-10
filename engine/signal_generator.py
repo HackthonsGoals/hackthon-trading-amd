@@ -1,5 +1,12 @@
 from __future__ import annotations
 
+"""
+Simulated / proof-of-concept signal generator.
+These are NOT real trading signals. They combine 30-day price momentum,
+recent news sentiment, and static volatility regimes to emit demo BUY/SELL/HOLD labels
+for UI demonstration purposes only.
+"""
+
 from pathlib import Path
 
 import numpy as np
@@ -105,18 +112,21 @@ def _signal_for_ticker(symbol: str, analyzer: SentimentAnalyzer | None = None, v
     }
 
 
-def generate_dummy_signals(
-    frame: pd.DataFrame,
-    probabilities: np.ndarray,
-    sentiment_by_symbol: dict[str, dict] | None = None,
+def generate_signals_for_demo(
     analyzer: SentimentAnalyzer | None = None,
     volatility_by_symbol: dict[str, str] | None = None,
 ) -> list[dict]:
+    """Generate signals for tech sector tickers using live data."""
+    TECH_SECTOR_TICKERS = ["AMD", "NVDA", "MSFT", "GOOGL", "META", "TSLA", "INTC", "AAPL"]
     results = []
     volatility_by_symbol = volatility_by_symbol or {}
-    for symbol in ("AMD", "NVDA"):
+    for symbol in TECH_SECTOR_TICKERS:
         volatility = volatility_by_symbol.get(symbol, "MED")
-        sig = _signal_for_ticker(symbol, analyzer=analyzer, volatility=volatility)
-        if sig is not None:
-            results.append(sig)
+        try:
+            sig = _signal_for_ticker(symbol, analyzer=analyzer, volatility=volatility)
+            if sig is not None:
+                results.append(sig)
+        except Exception as e:
+            print(f"Warning: Could not generate signal for {symbol}: {e}")
+            continue
     return results

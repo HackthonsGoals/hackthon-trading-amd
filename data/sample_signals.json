@@ -3,11 +3,160 @@
     "symbol": "AMD",
     "signal": "BUY",
     "confidence": 0.9,
-    "sentiment": "NEUTRAL",
-    "sentiment_score": 0.0,
+    "sentiment": "POSITIVE",
+    "sentiment_score": 0.13,
     "entry": 455.19,
     "sl": 450.64,
     "target": 462.02,
-    "llm_reason": "The BUY signal for AMD was generated due to a high confidence level of 90.0%, indicating strong technical indicators suggesting a potential upward move. Despite a NEUTRAL sentiment score, the entry price of $455.19, with a stop-loss at $450.64 and target at $462.02, reflects a calculated risk-reward setup based on identified support and resistance levels."
+    "news_headlines": [
+      "5 Things Investors Should Know from AMD's Latest Earnings Call (Including the Company's $120 Billion Server CPU Opportunity)",
+      "AMD Rackspace AI Cloud Deal Targets Regulated Growth And Valuation Questions",
+      "AMD Stock Is Up 320% Over the Past Year. Should Investors Shift Their Attention Away From Nvidia?",
+      "Analysts turn heads with AMD stock forecast\u00a0after massive rally",
+      "Jim Cramer Slams AMD Downgrade"
+    ],
+    "volatility_regime": "MED",
+    "explanation": "POSITIVE sentiment (+0.13) + MED volatility \u2192 BUY (demo rule)",
+    "llm_reason": "The BUY signal for AMD was generated due to strong positive sentiment (+0.1300) and high confidence (90.0%), indicating favorable market sentiment and technical alignment. The entry price of $455.19 is supported by a tight stop-loss at $450.64 and a target at $462.02, reflecting a well-defined risk-reward structure."
+  },
+  {
+    "symbol": "NVDA",
+    "signal": "BUY",
+    "confidence": 0.9,
+    "sentiment": "POSITIVE",
+    "sentiment_score": 0.13,
+    "entry": 215.2,
+    "sl": 213.05,
+    "target": 218.43,
+    "news_headlines": [
+      "The Nasdaq's top winners are now running hotter than in 2000: Chart of the Day",
+      "CoreWeave Stock Was Just Slammed. Is This a Buy-the-Dip Moment?",
+      "The Memory Shortage Is Coming for Big Tech's Bottom Line. This Company Will Hold Up Better Than Anyone Else.",
+      "Prediction: The Helium Crunch Will Accelerate the Reshoring of Artificial Intelligence (AI) Chip Manufacturing. Here Are the Best Growth Stocks to Own.",
+      "Why Caterpillar Could Be the AI Stock of the Year"
+    ],
+    "volatility_regime": "MED",
+    "explanation": "POSITIVE sentiment (+0.13) + MED volatility \u2192 BUY (demo rule)",
+    "llm_reason": "The BUY signal for NVDA was generated due to strong positive sentiment (+0.1300) and high confidence (90.0%), indicating favorable market sentiment and a strong likelihood of upward movement. The entry price of $215.20, with a stop-loss at $213.05 and target at $218.43, reflects a calculated risk-reward setup based on current market conditions."
+  },
+  {
+    "symbol": "MSFT",
+    "signal": "HOLD",
+    "confidence": 0.4039,
+    "sentiment": "POSITIVE",
+    "sentiment_score": 0.13,
+    "entry": 415.12,
+    "sl": 415.12,
+    "target": 415.12,
+    "news_headlines": [
+      "The Memory Shortage Is Coming for Big Tech's Bottom Line. This Company Will Hold Up Better Than Anyone Else.",
+      "Paul Tudor Jones Warns Trump-Era Market Boom Could End in a 35% Crash. Here\u2019s Why He\u2019s Still Buying Stocks",
+      "Microsoft Deal Strengthens Black Hills Corporation (BKH) Prospects as a High Growth Utility Stock to Buy",
+      "Goldman Sachs spots a troubling big tech trend",
+      "Jim Cramer on Salesforce: \u201cIt\u2019s Tough Because the Market Hates Software\u201d"
+    ],
+    "volatility_regime": "MED",
+    "explanation": "POSITIVE sentiment (+0.13) + MED volatility \u2192 HOLD (demo rule)",
+    "llm_reason": "The trading signal for MSFT recommends holding based on a positive sentiment score of +0.1300, indicating moderate bullish sentiment. However, the low confidence level of 40.4% suggests limited conviction in the signal, and the identical entry, stop-loss, and target prices imply a lack of clear directional bias in the analysis."
+  },
+  {
+    "symbol": "GOOGL",
+    "signal": "BUY",
+    "confidence": 0.6185,
+    "sentiment": "NEUTRAL",
+    "sentiment_score": 0.0,
+    "entry": 400.8,
+    "sl": 396.79,
+    "target": 406.81,
+    "news_headlines": [
+      "The Memory Shortage Is Coming for Big Tech's Bottom Line. This Company Will Hold Up Better Than Anyone Else.",
+      "Is Now a Good Time to Buy Amazon Stock?",
+      "Alphabet\u2019s $17b Bond Sale Reshapes AI Spending And Valuation Story",
+      "Goldman Sachs spots a troubling big tech trend",
+      "The Best AI Software Stock to Buy in 2026"
+    ],
+    "volatility_regime": "MED",
+    "explanation": "NEUTRAL sentiment (+0.00) + MED volatility \u2192 BUY (demo rule)",
+    "llm_reason": "The BUY signal for GOOGL was generated due to a technical setup indicating potential upward momentum, with a confidence level of 61.9%. Despite the NEUTRAL sentiment score, the entry price of $400.80 suggests a favorable risk-reward profile, with a stop-loss at $396.79 and a target at $406.81."
+  },
+  {
+    "symbol": "META",
+    "signal": "HOLD",
+    "confidence": 0.3772,
+    "sentiment": "NEUTRAL",
+    "sentiment_score": 0.0,
+    "entry": 609.63,
+    "sl": 609.63,
+    "target": 609.63,
+    "news_headlines": [
+      "CoreWeave Stock Was Just Slammed. Is This a Buy-the-Dip Moment?",
+      "Is Vistra (VST) the Best Utility Stock that Beat Earnings Estimates?",
+      "The Memory Shortage Is Coming for Big Tech's Bottom Line. This Company Will Hold Up Better Than Anyone Else.",
+      "Goldman Sachs spots a troubling big tech trend",
+      "Jim Cramer Says \u201cI Wish I\u2019d Bought Dell for My Charitable Trust a Hundred Points Ago\u201d"
+    ],
+    "volatility_regime": "MED",
+    "explanation": "NEUTRAL sentiment (+0.00) + MED volatility \u2192 HOLD (demo rule)",
+    "llm_reason": "The HOLD signal for META was generated due to a NEUTRAL sentiment score and low confidence level of 37.7%, indicating insufficient evidence to justify a directional trade. The identical entry, stop-loss, and target prices suggest a lack of clear price movement signals."
+  },
+  {
+    "symbol": "TSLA",
+    "signal": "BUY",
+    "confidence": 0.9,
+    "sentiment": "NEUTRAL",
+    "sentiment_score": 0.0,
+    "entry": 428.35,
+    "sl": 424.07,
+    "target": 434.78,
+    "news_headlines": [
+      "Wedbush sends blunt message on Elon Musk's Tesla and Intel deal",
+      "Tesla (TSLA) Is Up 7.9% After China EV Rebound and Terafab AI Chip Push - What's Changed",
+      "Is Cathie Wood Still Hopeful About Tesla (TSLA)?",
+      "Elon Musk Fires Back As Calls To Tax Billionaires Grow Louder, Says Paid More Taxes Than 'Anyone In History'",
+      "Elon Musk Says 'I Hope Civilization's Around in 100 Years' But If It Is, Expect It To Look Super Different With 10x's More Humanoid Robots Than Humans"
+    ],
+    "volatility_regime": "MED",
+    "explanation": "NEUTRAL sentiment (+0.00) + MED volatility \u2192 BUY (demo rule)",
+    "llm_reason": "The BUY signal for TSLA was generated due to a high confidence level of 90.0%, indicating strong technical indicators suggesting a potential upward move. Despite the NEUTRAL sentiment score, the entry price of $428.35, with a stop-loss at $424.07 and a target at $434.78, reflects a calculated risk-reward setup based on identified support and price action."
+  },
+  {
+    "symbol": "INTC",
+    "signal": "BUY",
+    "confidence": 0.9,
+    "sentiment": "POSITIVE",
+    "sentiment_score": 0.13,
+    "entry": 124.92,
+    "sl": 123.67,
+    "target": 126.79,
+    "news_headlines": [
+      "CoreWeave Stock Was Just Slammed. Is This a Buy-the-Dip Moment?",
+      "Prediction: The Helium Crunch Will Accelerate the Reshoring of Artificial Intelligence (AI) Chip Manufacturing. Here Are the Best Growth Stocks to Own.",
+      "Why Caterpillar Could Be the AI Stock of the Year",
+      "Why Iamgold Stock Jumped This Week",
+      "Wedbush sends blunt message on Elon Musk's Tesla and Intel deal"
+    ],
+    "volatility_regime": "MED",
+    "explanation": "POSITIVE sentiment (+0.13) + MED volatility \u2192 BUY (demo rule)",
+    "llm_reason": "The BUY signal for INTC was generated due to strong positive sentiment (+0.1300) and high confidence (90.0%), indicating favorable market sentiment and a strong likelihood of upward movement. The entry price of $124.92 targets a potential rise to $126.79, with a stop-loss at $123.67 to manage downside risk."
+  },
+  {
+    "symbol": "AAPL",
+    "signal": "BUY",
+    "confidence": 0.6216,
+    "sentiment": "NEUTRAL",
+    "sentiment_score": 0.0,
+    "entry": 293.32,
+    "sl": 290.39,
+    "target": 297.72,
+    "news_headlines": [
+      "The Nasdaq's top winners are now running hotter than in 2000: Chart of the Day",
+      "Dow Jones Futures: Market At Highs With Iran, Trump-Xi Summit In Focus; Apple, Nvidia, Boeing In Buy Areas",
+      "Paul Tudor Jones Warns Trump-Era Market Boom Could End in a 35% Crash. Here\u2019s Why He\u2019s Still Buying Stocks",
+      "Is Intel Stock the Next Nvidia?",
+      "Apple dominated the 2026 chip war. Google\u2019s partners are left to buy scraps"
+    ],
+    "volatility_regime": "MED",
+    "explanation": "NEUTRAL sentiment (+0.00) + MED volatility \u2192 BUY (demo rule)",
+    "llm_reason": "The BUY signal for AAPL was generated based on a 62.2% confidence level, indicating a moderate likelihood of a price increase. The NEUTRAL sentiment suggests no strong bullish or bearish market sentiment, but the technical setup supports a potential upward move. The entry price of $293.32 targets $297.72 with a stop-loss at $290.39 to manage risk."
   }
 ]

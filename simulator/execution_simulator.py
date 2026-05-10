@@ -45,7 +45,12 @@ class ExecutionSimulator:
             slip = entry * (slippage_bps / 10_000.0)
             direction = 1 if side == "BUY" else -1
             fill_entry = entry + slip * direction
-            drift = self.random.uniform(-0.006, 0.006) * entry
+            # ── UPGRADED: Sentiment-aware drift ──────────────────────────────
+            sentiment_score = signal.get("sentiment_score", 0.0)  # range: -1 to +1
+            sentiment_bias = sentiment_score * 0.004 * entry  # bias exit in sentiment direction
+            noise = self.random.gauss(0, 0.003) * entry  # stochastic component
+            drift = (sentiment_bias * direction) + noise
+            # ─────────────────────────────────────────────────────────────────
             exit_price = fill_entry + drift
             pnl = (exit_price - fill_entry) * quantity * direction
             notional = max(fill_entry * quantity, 1e-9)

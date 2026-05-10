@@ -10,3 +10,4 @@ streamlit_job.log
 models/sentiment-distilbert/
 data/simulated_trades.json
 .env
+assets/gpu_trace.json

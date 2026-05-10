@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import time
+
 import pandas as pd
 import plotly.express as px
 import streamlit as st
@@ -29,6 +31,25 @@ def render_dashboard(
     trade_summary: dict,
     volatility_by_symbol: dict[str, str] = None,
 ) -> None:
+    # Sidebar Experiment Controls
+    st.sidebar.header("Experiment Controls")
+    st.sidebar.caption(
+        "Adjust sentiment backend and benchmark batch size to see how the pipeline reacts."
+    )
+    
+    st.sidebar.selectbox(
+        "Sentiment model",
+        ["Fine-tuned", "Baseline"],
+        help="Compare the custom fine-tuned DistilBERT checkpoint with the generic baseline model."
+    )
+    
+    st.sidebar.select_slider(
+        "Max Batch Size (Benchmark)",
+        options=[50, 100, 250, 500, 1000],
+        value=500,
+        help="Upper limit for benchmark batch sizes used in the Performance Metrics section."
+    )
+
     st.title("AMD GPU-Accelerated AI Signal Pipeline")
     st.caption('Agentic Pipeline: Signal Agent → Sentiment Agent → Reasoning Agent (Qwen3-8B on AMD)')
     st.caption(
@@ -36,12 +57,12 @@ def render_dashboard(
     )
 
     st.info("""
-    **Judge Walkthrough:**
-    1. Check device, latency, throughput, and ROCm status in the GPU panel below.
-    2. Look at the sentiment panel: headlines, sentiment scores, distributions.
-    3. Watch the live signals and trade simulator P&L metrics.
-    4. Adjust batch size (in the sidebar) for benchmarks and observe CPU vs GPU throughput charts.
-    """)
+**Demo Guide**
+1. Inspect device, latency, throughput, and ROCm status in the GPU panel below.
+2. Review news sentiment: headlines, sentiment scores, and distributions.
+3. Examine live signals and simulated P&L metrics.
+4. Adjust batch size in the sidebar and observe CPU vs GPU throughput in Performance Metrics.
+""")
 
     cuda_available = torch.cuda.is_available()
     device_name = torch.cuda.get_device_name(0) if cuda_available else "N/A"
@@ -59,14 +80,26 @@ def render_dashboard(
 
     best_speedup = benchmark.get("best_speedup")
     cols = st.columns(5)
-    cols[0].metric("Market Device", "MI300X / ROCm 7.2")
+    
+    # Honest hardware reporting. Shows CPU if running locally without ROCm, prevents fake "GPU Speedup" claims.
+    device_str = "GPU (AMD-ready, via PyTorch)" if "cuda" in str(inference_metrics.get("device", "")).lower() else "CPU (No GPU detected)"
+    
+    cols[0].metric("Market Device", device_str)
     cols[1].metric("Market Latency", f"{inference_metrics['latency_ms']:.3f} ms")
     cols[2].metric("Signals/sec", f"{inference_metrics['throughput_rows_per_second']:.0f}")
-    cols[3].metric("GPU Speedup", "MI300X x1")
+    cols[3].metric("GPU Speedup", f"{best_speedup:.2f}x" if best_speedup else "Pending (No GPU)")
     cols[4].metric("Demo P&L", f"{trade_summary.get('total_pnl', 0):.2f}")
 
-    st.subheader("Live Signals")
-    _display_cols = [c for c in ["symbol", "signal", "confidence", "sentiment", "sentiment_score", "entry", "sl", "target"] if c in signal_frame.columns]
+    st.caption(
+        f"Last updated: {pd.Timestamp.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC"
+    )
+
+    st.subheader("Live Signals & AI Reasoning")
+    if volatility_by_symbol:
+        signal_frame["volatility"] = signal_frame["symbol"].map(
+            lambda s: volatility_by_symbol.get(s, "N/A")
+        )
+    _display_cols = [c for c in ["symbol", "signal", "confidence", "sentiment", "sentiment_score", "volatility", "entry", "sl", "target"] if c in signal_frame.columns]
     st.dataframe(
         _style_signals(signal_frame[_display_cols]),
         use_container_width=True,
@@ -78,16 +111,22 @@ def render_dashboard(
             "confidence":      st.column_config.NumberColumn("Conf.",   width="small",  format="%.1%%"),
             "sentiment":       st.column_config.TextColumn("Sentiment", width="medium"),
             "sentiment_score": st.column_config.NumberColumn("Sent. Score", width="small", format="%+.3f"),
+            "volatility":      st.column_config.TextColumn("Volatility", width="small"),
             "entry":           st.column_config.NumberColumn("Entry",   width="small",  format="$%.2f"),
             "sl":              st.column_config.NumberColumn("Stop-Loss",width="small",  format="$%.2f"),
             "target":          st.column_config.NumberColumn("Target",  width="small",  format="$%.2f"),
         },
     )
-    if "llm_reason" in signal_frame.columns:
-        st.subheader("AI Signal Reasoning")
-        for _, row in signal_frame.iterrows():
+    if "llm_reason" in signal_frame.columns and not signal_frame.empty:
+        if "confidence" in signal_frame.columns:
+            signal_frame = signal_frame.sort_values("confidence", ascending=False)
+        st.caption("Showing top 3 signals by confidence for readability.")
+        for _, row in signal_frame.head(3).iterrows():
             color = "🟢" if row['signal'] == 'BUY' else "🔴" if row['signal'] == 'SELL' else "🟡"
-            st.markdown(f"{color} **{row['symbol']} — {row['signal']}** ({row['confidence']:.1%} confidence): {row['llm_reason']}")
+            st.markdown(
+                f"{color} **{row['symbol']} — {row['signal']}** "
+                f"({row['confidence']:.1%} confidence): {row['llm_reason']}"
+            )
 
     if signals and signals[0].get("news_headlines"):
         st.subheader("Live AMD News Feed")
@@ -98,7 +137,7 @@ def render_dashboard(
         for headline in sig["news_headlines"]:
             st.markdown(f"{news_color} {headline} — *score: {score_val:+.4f}*")
 
-    st.subheader("Headline Sentiment")
+    st.subheader("News Sentiment Analytics")
     if sentiment_frame.empty:
         st.info("No headlines loaded.")
     else:
@@ -133,6 +172,44 @@ def render_dashboard(
         )
         st.plotly_chart(fig, use_container_width=True)
 
+    # Sector Signal Heatmap
+    st.subheader("Sector Signal Heatmap")
+    if signals:
+        heatmap_data = pd.DataFrame(signals)[["symbol", "signal", "confidence", "sentiment"]]
+
+        def _color_signal(val: str) -> str:
+            if val == "BUY":
+                return "background-color: #16a34a; color: white"   # green
+            elif val == "SELL":
+                return "background-color: #dc2626; color: white"   # red
+            return "background-color: #64748b; color: white"       # neutral/hold
+
+        # UI/UX SPECIALIST NOTE: Using 'Tint & Shade' badges. 
+        # By forcing both background (tint) and text color (shade), we ensure legibility in both Dark and Light modes.
+        def _color_sentiment(val: str) -> str:
+            if val == "POSITIVE":
+                return "background-color: #dcfce7; color: #166534;"  # emerald tint/shade
+            elif val == "NEGATIVE":
+                return "background-color: #fee2e2; color: #991b1b;"  # rose tint/shade
+            return "background-color: #f1f5f9; color: #475569;"      # slate tint/shade
+
+        styled_df = (
+            heatmap_data.style
+            .map(_color_signal, subset=["signal"])
+            .map(_color_sentiment, subset=["sentiment"])
+            .format({"confidence": "{:.2%}"})
+        )
+        st.dataframe(
+            styled_df,
+            use_container_width=True,
+            column_config={
+                "symbol": st.column_config.TextColumn("symbol", width="small"),
+                "signal": st.column_config.TextColumn("signal", width="small"),
+                "confidence": st.column_config.NumberColumn("confidence", width="small", format="%.2%%"),
+                "sentiment": st.column_config.TextColumn("sentiment", width="small"),
+            },
+        )
+
     left, right = st.columns([1.2, 1])
     with left:
         st.subheader("Market Data")
@@ -144,13 +221,20 @@ def render_dashboard(
         st.line_chart(market_data.pivot_table(index="timestamp", columns="symbol", values="close"))
 
     with right:
-        st.subheader("Trade Simulation")
+        st.subheader("Simulated Trade Summary")
         sim_cols = st.columns(3)
         sim_cols[0].metric("Closed Trades", trade_summary.get("trades", 0))
         sim_cols[1].metric("Win Rate", f"{trade_summary.get('win_rate', 0) * 100:.1f}%")
         sim_cols[2].metric("Avg Return", f"{trade_summary.get('avg_return_pct', 0):.3f}%")
 
     st.subheader("Performance Metrics")
+    
+    if best_speedup:
+        st.success(f"**Best GPU Speedup**: {best_speedup:.2f}x")
+    else:
+        st.info("GPU results pending (no compatible device detected)")
+        st.caption("Run this app on AMD Developer Cloud with ROCm to populate GPU metrics.")
+
     market_records = pd.DataFrame(benchmark.get("records", []))
     sentiment_records_df = pd.DataFrame(sentiment_benchmark.get("records", []))
     perf_left, perf_right = st.columns(2)
@@ -209,36 +293,79 @@ def render_dashboard(
                 },
             )
 
+    # --- Live GPU Inference Monitor (Bug 4: moved here from app.py) ---
+    with st.expander("⚡ Live GPU Inference Monitor", expanded=False):
+        st.subheader("⚡ Live GPU Inference Monitor")
+        _gpu_col1, _gpu_col2 = st.columns(2)
+        with _gpu_col1:
+            gpu_latency_placeholder = st.empty()
+        with _gpu_col2:
+            cpu_latency_placeholder = st.empty()
+        inference_log = st.empty()
+    
+        if st.button("🔄 Run Live Benchmark (10 iterations)", key="live_gpu_benchmark_btn"):
+            from engine.ai_inference import run_batch_inference as _run_batch
+    
+            progress_bar = st.progress(0)
+            for i in range(10):
+                _test_data = {
+                    "symbol": ["AMD"] * 100,
+                    "timestamp": pd.date_range("2024-01-01", periods=100, freq="1min"),
+                    "open": 150.0,
+                    "high": 152.0,
+                    "low": 149.0,
+                    "close": 151.0,
+                    "volume": 1_000_000,
+                }
+                _df_test = pd.DataFrame(_test_data)
+                gpu_result = _run_batch(_df_test, prefer_gpu=True)
+                cpu_result = _run_batch(_df_test, prefer_gpu=False)
+                gpu_latency_placeholder.metric(
+                    "GPU Latency",
+                    f"{gpu_result.latency_ms:.1f}ms",
+                    delta=f"{gpu_result.throughput_rows_per_second:.0f} rows/s",
+                )
+                cpu_latency_placeholder.metric(
+                    "CPU Latency",
+                    f"{cpu_result.latency_ms:.1f}ms",
+                    delta=f"{cpu_result.throughput_rows_per_second:.0f} rows/s",
+                )
+                speedup = cpu_result.latency_ms / max(gpu_result.latency_ms, 1e-9)
+                inference_log.success(f"Iteration {i + 1}/10 | GPU Speedup: {speedup:.2f}x")
+                progress_bar.progress((i + 1) / 10)
+                time.sleep(0.5)
+            st.balloons()
+
     st.subheader("Trade Lifecycle")
     if trade_frame.empty:
         st.info("No BUY/SELL trades were generated in this run.")
-        return
-
-    trade_frame["cumulative_pnl"] = trade_frame["pnl"].cumsum()
-    st.dataframe(trade_frame, use_container_width=True, hide_index=True)
-    fig = px.line(trade_frame, x="closed_at", y="cumulative_pnl", markers=True, title="Cumulative Simulated P&L")
-    st.plotly_chart(fig, use_container_width=True)
+    else:
+        trade_frame["cumulative_pnl"] = trade_frame["pnl"].cumsum()
+        st.dataframe(trade_frame, use_container_width=True, hide_index=True)
+        fig = px.line(trade_frame, x="closed_at", y="cumulative_pnl", markers=True, title="Cumulative Simulated P&L")
+        st.plotly_chart(fig, use_container_width=True)
 
     st.markdown("---")
-    st.subheader("Pipeline X-ray (Debug)")
-    if signal_frame.empty:
-        st.info("No signals available to trace.")
-    else:
-        xray_cols = ["symbol", "news_headlines", "sentiment_score", "sentiment", "volatility_regime", "signal", "explanation"]
-        available_xray = [c for c in xray_cols if c in signal_frame.columns]
-        
-        # Displaying a flattened view of the pipeline
-        st.dataframe(
-            signal_frame[available_xray],
-            use_container_width=True,
-            hide_index=True,
-            column_config={
-                "symbol": st.column_config.TextColumn("Symbol"),
-                "news_headlines": st.column_config.ListColumn("Headlines"),
-                "sentiment_score": st.column_config.NumberColumn("Sent. Score", format="%+.3f"),
-                "sentiment": st.column_config.TextColumn("Sentiment Label"),
-                "volatility_regime": st.column_config.TextColumn("Volatility"),
-                "signal": st.column_config.TextColumn("Final Signal"),
-                "explanation": st.column_config.TextColumn("Rule Explanation", width="large"),
-            }
-        )
+    with st.expander("🔍 Pipeline X-ray (Debug)", expanded=False):
+        st.subheader("Pipeline X-ray (Debug)")
+        if signal_frame.empty:
+            st.info("No signals available to trace.")
+        else:
+            xray_cols = ["symbol", "news_headlines", "sentiment_score", "sentiment", "volatility_regime", "signal", "explanation"]
+            available_xray = [c for c in xray_cols if c in signal_frame.columns]
+            
+            # Displaying a flattened view of the pipeline
+            st.dataframe(
+                signal_frame[available_xray],
+                use_container_width=True,
+                hide_index=True,
+                column_config={
+                    "symbol": st.column_config.TextColumn("Symbol"),
+                    "news_headlines": st.column_config.ListColumn("Headlines"),
+                    "sentiment_score": st.column_config.NumberColumn("Sent. Score", format="%+.3f"),
+                    "sentiment": st.column_config.TextColumn("Sentiment Label"),
+                    "volatility_regime": st.column_config.TextColumn("Volatility"),
+                    "signal": st.column_config.TextColumn("Final Signal"),
+                    "explanation": st.column_config.TextColumn("Rule Explanation", width="large"),
+                }
+            )
